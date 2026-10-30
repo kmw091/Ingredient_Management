@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나만의 냉장고</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- 상단 헤더 -->
+  <header class="app-header">
+    <h1>🧊 나만의 냉장고</h1>
+    <p class="storage-info" id="storageInfo"></p>
+  </header>
+
+  <!-- 탭 메뉴 -->
+  <nav class="tabs">
+    <button class="tab active" data-tab="fridge">🧊 내 냉장고</button>
+    <button class="tab" data-tab="recipe">🍳 레시피 추천</button>
+  </nav>
+
+  <main>
+    <!-- ===== 탭 1: 내 냉장고 ===== -->
+    <section id="tab-fridge" class="tab-panel active">
+      <div id="summaryBar" class="summary-bar"></div>
+      <div id="warningBanner"></div>
+
+      <div class="toolbar">
+        <input type="search" id="searchInput" placeholder="🔍 재료 이름 검색">
+        <select id="sortSelect" aria-label="정렬">
+          <option value="expiry">임박순</option>
+          <option value="added">최근 등록순</option>
+          <option value="name">이름순</option>
+        </select>
+        <select id="statusFilter" aria-label="상태 필터">
+          <option value="all">상태: 전체</option>
+          <option value="soon">임박만</option>
+          <option value="expired">만료만</option>
+        </select>
+      </div>
+
+      <div class="chip-group" id="locationFilter">
+        <button class="chip active" data-loc="all">전체</button>
+        <button class="chip" data-loc="냉장">❄️ 냉장</button>
+        <button class="chip" data-loc="냉동">🧊 냉동</button>
+        <button class="chip" data-loc="실온">🏠 실온</button>
+      </div>
+
+      <div id="itemList" class="item-grid"></div>
+      <p id="emptyMsg" class="empty hidden"></p>
+    </section>
+
+    <!-- ===== 탭 2: 레시피 추천 ===== -->
+    <section id="tab-recipe" class="tab-panel">
+      <div class="recipe-controls">
+        <label class="check">
+          <input type="checkbox" id="urgentOnly"> 🔥 임박 재료 살리기만 보기
+        </label>
+        <p class="hint-text">만료된 재료는 추천에서 제외돼요. 소금·간장 같은 기본 양념은 항상 있다고 가정해요.</p>
+      </div>
+      <div id="recipeResult"></div>
+    </section>
+  </main>
+
+  <!-- 재료 추가 버튼 -->
+  <button class="fab" id="addBtn" aria-label="재료 추가">+</button>
+
+  <!-- ===== 모달: 재료 추가/수정 ===== -->
+  <div class="overlay hidden" id="itemModal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="itemModalTitle">
+      <div class="modal-head">
+        <h2 id="itemModalTitle">재료 추가</h2>
+        <button type="button" class="icon-btn" data-close aria-label="닫기">✕</button>
+      </div>
+
+      <form id="itemForm">
+        <div class="field">
+          <label for="f-name">식재료명 <em>*</em></label>
+          <input type="text" id="f-name" list="presetList" maxlength="20" placeholder="예) 달걀, 대파, 두부" required autocomplete="off">
+          <datalist id="presetList"></datalist>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="f-category">카테고리</label>
+            <select id="f-category"></select>
+          </div>
+          <div class="field">
+            <label for="f-location">보관 위치 <em>*</em></label>
+            <select id="f-location">
+              <option>냉장</option>
+              <option>냉동</option>
+              <option>실온</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="f-qty">수량 <em>*</em></label>
+            <input type="number" id="f-qty" min="0.1" step="any" value="1" required>
+          </div>
+          <div class="field">
+            <label for="f-unit">단위</label>
+            <select id="f-unit"></select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="f-dateType">기한 종류 <em>*</em></label>
+            <select id="f-dateType">
+              <option value="유통">유통기한</option>
+              <option value="소비">소비기한</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="f-expiry">기한 날짜 <em>*</em></label>
+            <input type="date" id="f-expiry" required>
+          </div>
+        </div>
+        <p class="hint-text hidden" id="expiryHint"></p>
+
+        <div class="field">
+          <label>사진 (선택)</label>
+          <div class="photo-box">
+            <div class="photo-preview" id="photoPreview"><span>📷</span></div>
+            <div class="photo-btns">
+              <label class="btn btn-sub" for="f-photo">사진 선택</label>
+              <input type="file" id="f-photo" accept="image/*" hidden>
+              <button type="button" class="btn btn-sub hidden" id="photoRemove">사진 삭제</button>
+              <small>자동으로 작게 압축해서 저장돼요.</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-memo">메모 (선택)</label>
+          <input type="text" id="f-memo" maxlength="40" placeholder="예) 반쪽 남음, 개봉함">
+        </div>
+
+        <div class="modal-foot">
+          <button type="button" class="btn btn-sub" data-close>취소</button>
+          <button type="submit" class="btn btn-main">저장</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== 모달: 레시피 상세 ===== -->
+  <div class="overlay hidden" id="recipeModal">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <h2 id="recipeModalTitle"></h2>
+        <button type="button" class="icon-btn" data-close aria-label="닫기">✕</button>
+      </div>
+      <div id="recipeModalBody"></div>
+    </div>
+  </div>
+
+  <script src="recipes.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
